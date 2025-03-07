@@ -1,0 +1,21 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    {% include 'partials/head.html' %}
+    <title>{% block title %}استخراج متن از یوتیوب{% endblock title %}</title>
+</head>
+
+<body dir="rtl" class="flex min-h-screen flex-col">
+    {% include 'partials/navbar.html' %}
+        {% block body%}
+        {% endblock body%}
+    {% include 'partials/footer.html' %}
+
+    {% block script%}
+    {% endblock script%}
+
+    {% include 'partials/script.html' %}
+</body>
+</html>
