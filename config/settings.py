@@ -15,6 +15,7 @@ from decouple import config, Csv
 import dj_database_url
 import os
 
+from django.template.defaultfilters import default
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -134,3 +135,7 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"),)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+OPENAI_API_KEY = config("OPENAI_API_KEY", cast=str)

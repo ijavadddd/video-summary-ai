@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
 {% block body %}
+    <p id="result-error" class="text-red-700 bg-red-300 border-red-400 py-2 px-2 text-center border-t-red-500 border-t-4 rounded-b-lg"></p>
+
    <!-- Main Content -->
     <div class="flex-grow">
         <div class="container mx-auto mb-10 mt-10 max-w-3xl rounded-lg bg-gray-100 p-5 shadow-md">
@@ -10,7 +12,8 @@
                 فقط لینک ویدیو یوتیوب را در زیر وارد کنید و اجازه دهید هوش مصنوعی محتوا را برای شما ایجاد کند!
             </p>
             <div class="mx-auto">
-                <form action="" class="mx-auto mt-4 flex w-full">
+                <form id="summaryForm" method="POST" class="mx-auto mt-4 flex w-full">
+                    {% csrf_token %}
                     <input
                         type="text"
                         name="link"
@@ -19,35 +22,78 @@
                         class="mx-0 mt-4 w-full rounded-r-lg border-1 border-sky-600 bg-white p-2 outline-none"
                     />
                     <input
-                        type="button"
+                        type="submit"
                         value="شروع"
                         class="mx-0 mt-4 cursor-pointer rounded-l-lg border-1 border-sky-600 bg-sky-600 p-2 text-white hover:bg-sky-700"
                     />
                 </form>
             </div>
         </div>
-    </div>
 
-    <!-- Loading Circle (Hidden by default) -->
-    <!-- <div id="loading-circle" class="load" style="display: block;"></div> -->
+        <!-- Loading Spinner -->
+        <div id="loading-circle" class="load hidden">
+            <p>Loading...</p>
+        </div>
 
-    <!-- Extracted Content Section (Commented out) -->
-    <div class="flex-grow">
-        <div class="container mx-auto mb-10 mt-10 max-w-3xl rounded-lg bg-gray-100 p-5 pb-1 shadow-md">
-            <h2 class="mb-3 text-center text-2xl">عنوان استخراج شده</h2>
-            <p class="text-justify">
-                لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و با استفاده از طراحان گرافیک است، چاپگرها و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که لازم است، و برای شرایط فعلی تکنولوژی مورد نیاز، و کاربردهای متنوع با هدف بهبود ابزارهای کاربردی می باشد، کتابهای زیادی در شصت و سه درصد گذشته حال و آینده، شناخت فراوان جامعه و متخصصان را می طلبد، تا با نرم افزارها شناخت بیشتری را برای طراحان رایانه ای علی الخصوص طراحان خلاقی، و فرهنگ پیشرو در زبان فارسی ایجاد کرد، در این صورت می توان امید داشت که تمام و دشواری موجود در ارائه راهکارها، و شرایط سخت تایپ به پایان رسد و زمان مورد نیاز شامل حروفچینی دستاوردهای اصلی، و جوابگوی سوالات پیوسته اهل دنیای موجود طراحی اساسا مورد استفاده قرار گیرد.
-            </p>
+        <!-- Result Block -->
+        <div id="result" class="container mx-auto mb-10 mt-10 max-w-3xl rounded-lg bg-gray-100 p-5 pb-1 shadow-md hidden">
+            <h2 id="result-title" class="mb-3 text-center text-2xl"></h2>
+            <p id="result-content" class="text-justify"></p>
             <hr class="my-4 w-90 mx-auto text-gray-300" />
             <div>
                 <h3 class="block">لینک ویدیو:</h3>
                 <div class="text-left">
-                    <a href="#" class="inline-block text-left text-blue-600 hover:underline">https://www.youtube.com</a>
+                    <a id="result-video-url" href="#" class="inline-block text-left text-blue-600 hover:underline"></a>
                     <i class="fa-brands fa-youtube text-red-500"></i>
                 </div>
             </div>
             <i class="fa-regular fa-bookmark fa-lg cursor-pointer"></i>
         </div>
     </div>
-
 {% endblock body %}
+
+{% block script %}
+<!-- AJAX Script -->
+<script>
+    $(document).ready(function() {
+        $('#result-error').addClass('hidden');
+
+        $('#summaryForm').on('submit', function(e) {
+            e.preventDefault(); // Prevent form submission
+
+            // Show loading spinner
+            $('#loading-circle').removeClass('hidden');
+            $('#result').addClass('hidden');
+            $('#result-error').addClass('hidden');
+
+            // Get the video URL
+            var videoUrl = $('#link').val();
+
+            // Send AJAX request
+            $.ajax({
+                url: "{% url 'video_summary:video_summary' %}",
+                type: "POST",
+                data: {
+                    'link': videoUrl,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}' // Add CSRF token for security
+                },
+                success: function(response) {
+                    // Hide loading spinner
+                    $('#loading-circle').addClass('hidden');
+
+                    // Display the result
+                    $('#result-title').text(response.title);
+                    $('#result-content').text(response.content);
+                    $('#result-video-url').attr('href', response.video_url).text(response.video_url);
+                    $('#result').removeClass('hidden');
+                },
+                error: function(xhr, status, error) {
+                    // Hide loading spinner and show error
+                    $('#loading-circle').addClass('hidden');
+                    $('#result-error').text("مشکلی پیش آمده دوباره تلاش کنید").removeClass('hidden');
+                }
+            });
+        });
+    });
+</script>
+{% endblock script %}

@@ -1,0 +1,5 @@
+{% for message in messages %}
+    {% if message %}
+        <p class="{{ message.tags }} py-2 px-3 mb-2 text-center rounded-b-lg border-t-5">{{ message }}</p>
+    {% endif %}
+{% endfor %}
