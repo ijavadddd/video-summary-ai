@@ -55,3 +55,31 @@ body {
     animation-iteration-count: infinite;
     animation-timing-function: linear;
 }
+
+.toggle-content {
+    transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    overflow: hidden;
+    max-height: 500px; /* Adjust based on content height */
+    opacity: 1;
+}
+.toggle-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+/* Toggle button styles */
+.toggle-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 10px;
+    transition: transform 0.3s ease;
+}
+.toggle-button i {
+    font-size: 1.2rem;
+    color: #0ea5e9; /* sky-600 */
+}
+.toggle-button.rotated i {
+    transform: rotate(180deg);
+}

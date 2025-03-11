@@ -21,4 +21,11 @@ def generate_otp(username_email: str):
 
     # Generate the OTP
     otp = totp.at(timezone.now().timestamp())
-    return otp
+    return otp, user
+
+
+def verify_otp(otp, username_email):
+    excepted_otp = generate_otp(username_email)
+    if otp == excepted_otp:
+        return True
+    return False

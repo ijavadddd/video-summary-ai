@@ -1,14 +1,17 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.urls import reverse_lazy
-from accounts.forms import LoginForm, SignUpForm
+from accounts.forms import LoginForm, SignUpForm, RecoveryPasswordForm, SetPasswordForm
 from django.contrib import messages
 from accounts.models import User
 from django.contrib.auth import authenticate, login, logout
-from accounts.forms import RecoveryPasswordForm, VerifyOTPForm
 from django.core.mail import send_mail
-from accounts.utils import generate_otp
-from django.http import JsonResponse
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.db.models import Q
+from utils import MessageStatus
+from django.contrib.auth.views import PasswordResetConfirmView
 
 
 class LoginView(View):
@@ -50,13 +53,13 @@ class LoginView(View):
                 messages.success(
                     request,
                     f"خوش آمدی {user.username}",
-                    "text-green-700 bg-green-300 border-green-400",
+                    MessageStatus.SUCCESS.value,
                 )
                 return redirect(self.next)
             messages.error(
                 request,
                 "نام کاربری یا رمزعبور صحیح نمی‌باشد",
-                "text-red-700 bg-red-300 border-red-400",
+                MessageStatus.ERROR.value,
             )
         return render(
             request,
@@ -104,7 +107,7 @@ class SignUpView(View):
                 messages.error(
                     request,
                     "نام کاربری مورد نظر در دسترس نمی‌باشد",
-                    "text-red-700 bg-red-300 border-red-400",
+                    MessageStatus.ERROR.value,
                 )
                 return render(
                     request,
@@ -124,7 +127,7 @@ class SignUpView(View):
             messages.success(
                 request,
                 "حساب کاربری شما با موفقیت ساخته شد",
-                "text-green-700 bg-green-300 border-green-400",
+                MessageStatus.SUCCESS.value,
             )
             return redirect(self.next)
         return render(
@@ -149,7 +152,6 @@ class LogoutView(View):
 class RecoveryPasswordView(View):
     template_name = "accounts/recovery_password.html"
     recovery_password_form = RecoveryPasswordForm
-    verify_otp_form = VerifyOTPForm
 
     def get(self, request, *args, **kwargs):
         return render(
@@ -157,7 +159,6 @@ class RecoveryPasswordView(View):
             self.template_name,
             {
                 "recovery_password_form": self.recovery_password_form(),
-                "verify_otp_form": self.verify_otp_form(),
             },
         )
 
@@ -165,51 +166,47 @@ class RecoveryPasswordView(View):
         recovery_password_form = self.recovery_password_form(request.POST)
         if recovery_password_form.is_valid():
             username_email = recovery_password_form.cleaned_data["username_email"]
-            otp = generate_otp(username_email)
-
-            # Send OTP via email (replace with your email sending logic)
-            send_mail(
-                "OTP Code",
-                f"Your OTP code is: {otp}",
-                "from@example.com",
-                [username_email],  # Assuming username_email is the user's email
-                fail_silently=False,
+            user = User.objects.get(
+                Q(username=username_email) | Q(email=username_email)
             )
+            if user.email:
+                token_generator = PasswordResetTokenGenerator()
+                token = token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                url = reverse_lazy(
+                    "accounts:set_password", kwargs={"uidb64": uid, "token": token}
+                )
+                send_mail(
+                    "Reset Password",
+                    f"Your Reset password link: {url}",
+                    "test@test.com",
+                    [user.email],  # Assuming username_email is the user's email
+                    fail_silently=False,
+                )
 
             # Return success response
-            return JsonResponse(
-                {
-                    "success": True,
-                    "username_email": username_email,
-                }
+            messages.success(
+                request,
+                message="""ما دستورالعمل‌های تنظیم رمز عبور را برای شما ایمیل کرده‌ایم، در صورتی که حسابی با ایمیل وارد شده وجود داشته باشد. شما باید به‌زودی این ایمیل را دریافت کنید.
+اگر ایمیلی دریافت نکردید، لطفاً مطمئن شوید که آدرس ایمیلی که ثبت‌نام کرده‌اید را وارد کرده‌اید و پوشه اسپم (هرزنامه) خود را نیز بررسی کنید.""",
+                extra_tags=MessageStatus.SUCCESS.value,
             )
-        else:
-            # Return error response
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Invalid input. Please check your username/email.",
-                }
+            return render(
+                request,
+                self.template_name,
+                {"recovery_password_form": recovery_password_form},
             )
 
 
-class VerifyOTPView(View):
-    verify_otp_form = VerifyOTPForm
+class SetPasswordView(PasswordResetConfirmView):
+    template_name = "accounts/set_password.html"
+    success_url = reverse_lazy("video_summary:main")
+    form_class = SetPasswordForm
 
-    def post(self, request, *args, **kwargs):
-        verify_otp_form = self.verify_otp_form(request.POST)
-        if verify_otp_form.is_valid():
-            username_email = verify_otp_form.cleaned_data["username_email"]
-            code = verify_otp_form.cleaned_data["code"]
-
-            # Verify OTP
-            if verify_otp(username_email, code):
-                return JsonResponse({"success": True})
-            else:
-                return JsonResponse(
-                    {"success": False, "error": "Invalid or expired OTP."}
-                )
-        else:
-            return JsonResponse(
-                {"success": False, "error": "Invalid input. Please check your OTP."}
-            )
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            "رمز عبور شما با موفقیت تغییر یافت. اکنون می‌توانید وارد شوید.",
+            extra_tags=MessageStatus.SUCCESS.value,
+        )
+        return super().form_valid(form)

@@ -4,7 +4,7 @@ from accounts.views import (
     SignUpView,
     LogoutView,
     RecoveryPasswordView,
-    VerifyOTPView,
+    SetPasswordView,
 )
 
 
@@ -16,5 +16,7 @@ urlpatterns = [
     path(
         "recovery-password/", RecoveryPasswordView.as_view(), name="recovery_password"
     ),
-    path("verify-otp/", VerifyOTPView.as_view(), name="verify_otp"),
+    path(
+        "set-password/<uidb64>/<token>/", SetPasswordView.as_view(), name="set_password"
+    ),
 ]

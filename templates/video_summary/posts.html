@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <!-- Middle Content -->
+    <div class="flex-grow my-5">
+        <!-- Post 1 -->
+        {% for post in posts %}
+        <div class="container mx-auto mb-3 max-w-3xl rounded-lg bg-gray-100 p-5 shadow-md">
+            <!-- Title and Toggle Button -->
+            	<div class="flex items-center">
+                <button class="toggle-button flex flex" data-target="post-1">
+                    <i class="fas fa-chevron-down text-black"></i>
+                </button>
+                <h2 class="mb-3 text-right text-2xl mx-2">{{ post.title }}</h2>
+
+                </div>
+                    <!-- Collapsible Content -->
+                    <div id="post-1" class="toggle-content collapsed">
+                        <p class="text-justify">
+                            {{ post.content }}
+                        </p>
+                        <hr class="my-4 w-90 mx-auto text-gray-300" />
+                    </div>
+
+                    <!-- Video Link (Always Visible) -->
+                    <div>
+                        <h3 class="block">لینک ویدیو:</h3>
+                        <div class="block text-left">
+                            <a href="#" class="text-blue-600 hover:underline" target="_blank">{{ post.url }}</a>
+                            <i class="fa-brands fa-youtube text-red-500"></i>
+                        </div>
+                    </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock body %}
+
+{% block script %}
+<!-- JavaScript for Toggle Functionality -->
+<script>
+    // Add event listeners to all toggle buttons
+    document.querySelectorAll('.toggle-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const targetId = button.getAttribute('data-target');
+            const targetContent = document.getElementById(targetId);
+
+            // Toggle the collapsed class on the target content
+            targetContent.classList.toggle('collapsed');
+
+            // Rotate the arrow icon
+            const icon = button.querySelector('i');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+        });
+    });
+</script>
+{% endblock script %}

@@ -1,11 +1,10 @@
 {% extends 'base.html' %}
 
 {% block body %}
-    <p id="result-error" class="text-red-700 bg-red-300 border-red-400 py-2 px-2 text-center border-t-red-500 border-t-4 rounded-b-lg"></p>
 
    <!-- Main Content -->
     <div class="flex-grow">
-        <div class="container mx-auto mb-10 mt-10 max-w-3xl rounded-lg bg-gray-100 p-5 shadow-md">
+        <div class="container mx-auto mt-10 max-w-3xl rounded-t-lg bg-gray-100 p-5 shadow-md">
             <h2 class="p-3 text-center text-2xl font-semibold">خلاصه‌ای از ویدیوهای یوتیوب را به راحتی به دست بیاورید</h2>
             <p class="text-center text-gray-600">
                 تولید مقالات وبلاگ با کیفیت بالا از ویدیوهای یوتیوب با استفاده از هوش مصنوعی.
@@ -29,11 +28,12 @@
                 </form>
             </div>
         </div>
+        <div class="container mx-auto mb-10 max-w-3xl mb-10">
+            <p id="result-error" class="hidden text-red-700 bg-red-300 py-2 px-2 text-center border-t-red-500 rounded-b-lg"></p>
+        </div>
 
         <!-- Loading Spinner -->
-        <div id="loading-circle" class="load hidden">
-            <p>Loading...</p>
-        </div>
+        <div id="loading-circle" class="load hidden"></div>
 
         <!-- Result Block -->
         <div id="result" class="container mx-auto mb-10 mt-10 max-w-3xl rounded-lg bg-gray-100 p-5 pb-1 shadow-md hidden">
